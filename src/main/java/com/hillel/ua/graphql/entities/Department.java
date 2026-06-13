@@ -16,9 +16,11 @@ public class Department {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     private Integer id;
+
     private String name;
     @OneToMany(mappedBy = "department")
     private Set<Employee> employees;
+
     @ManyToOne(fetch = FetchType.LAZY)
     private Organization organization;
 

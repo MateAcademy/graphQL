@@ -1,0 +1,25 @@
+# hello.gqls
+extend type Query {
+    helloWorld: String!
+    getHelloWorld: String!
+    greet(name: String!): String!
+    getMessage(id: ID!): Message
+}
+
+type Message {
+    id: ID!,
+    text: String,
+    author: String
+}
+
+
+#type Employee {
+#    id: ID!
+#    firstName: String!
+#    lastName: String!
+#    position: String!
+#    salary: Int
+#    age: Int
+#    department: Department
+#    organization: Organization
+#}

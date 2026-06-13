@@ -1,9 +1,9 @@
-type Query {
+extend type Query {
    departments: [Department]
    department(id: ID!): Department!
 }
 
-type Mutation {
+extend type Mutation {
    newDepartment(department: DepartmentRequestDto!): Department
    updateDepartment(department: DepartmentRequestDto!, id: ID!): Department
    deleteDepartment(id: ID!): Department

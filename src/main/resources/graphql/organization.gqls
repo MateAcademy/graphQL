@@ -2,7 +2,6 @@ extend type Query {
    organizations: [Organization]
    organization(id: ID!): Organization!
    organizationName(name: String!): Organization!
-
 }
 
 extend type Mutation {

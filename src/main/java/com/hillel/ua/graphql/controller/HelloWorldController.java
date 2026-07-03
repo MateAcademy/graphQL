@@ -1,6 +1,6 @@
 package com.hillel.ua.graphql.controller;
 
-import com.hillel.ua.graphql.entities.Message;
+import com.hillel.ua.graphql.entities.message.Message;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
@@ -10,11 +10,11 @@ import java.util.List;
 
 @Controller
 public class HelloWorldController {
+
     List<String> messageList = new ArrayList<>() {{
         add("message 0");
         add("message 1");
         add("message 2");
-
     }};
 
     @QueryMapping

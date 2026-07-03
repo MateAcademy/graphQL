@@ -13,3 +13,5 @@ spring:
     schema:
       printer:
         enabled: true
+      inspection:
+        enabled: true

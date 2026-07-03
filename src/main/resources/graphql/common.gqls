@@ -2,6 +2,7 @@
 scalar LocalDateTime @specifiedBy(url: "https://scalars.graphql.org/andimarek/local-date-time")
 scalar Url           @specifiedBy(url: "https://www.ietf.org/rfc/rfc3986.txt")
 scalar Long          @specifiedBy(url: "https://scalars.graphql.org/andimarek/long")
+scalar Date          @specifiedBy(url: "https://scalars.graphql.org/andimarek/local-date")
 
 directive @Min(value : Int!, message : String = "graphql.validation.Min.message") on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
 directive @Max(value : Int!, message : String = "graphql.validation.Max.message") on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
@@ -9,7 +10,6 @@ directive @Range(min : Int!, max : Int!, message : String = "graphql.validation.
 directive @NotBlank(message : String = "graphql.validation.NotBlank.message") on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
 directive @NotEmpty(message : String = "graphql.validation.NotEmpty.message") on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
 directive @ContainerNotEmpty(message : String = "graphql.validation.ContainerNotEmpty.message") on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
-
 
 enum ThumbnailFormat {
     DETAILS

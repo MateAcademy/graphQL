@@ -1608,6 +1608,243 @@ query { departments { name { length } } }
 
 ---
 
+## Сессия: 2026-06-29
+
+---
+
+**Вопрос:**
+Объясни 8 типов GraphQL — Object, Interface, Union, Enum, Scalar, InputObject, List, NonNull — с примерами из проекта, подробно по одному. Начиная с Object. Что из них на request, что на response? И что означает `extend type Mutation { createPet(input: CreatePetInput!): Pet; updatePet(id: Long!, input: UpdatePetInput!): Pet; deletePet(id: Long!): Pet }`?
+
+**Ответ:**
+
+### Input vs Output — классификация перед изучением
+
+| Категория | Типы | Направление |
+|---|---|---|
+| Output types (ответ) | Object, Interface, Union, Enum, Scalar | Сервер → Клиент |
+| Input types (запрос) | InputObject, Enum, Scalar | Клиент → Сервер |
+| Wrapping types (обёртки) | List, NonNull | Оборачивают любой тип |
+
+Enum и Scalar — используются в обоих направлениях.
+
+---
+
+### Тип 1 — Object
+
+Основной строительный блок GraphQL. Объект с именованными полями. Только OUTPUT (ответ).
+
+Из `pets.graphqls`:
+```graphql
+type Dog implements Pet {
+    id: Long
+    name: String
+    color: String
+    kind: PetKind
+    friends: [Pet]
+    owners: [Person!]
+}
+
+type Cat implements Pet {
+    id: Long
+    name: String
+    color: String
+    kind: PetKind
+    friends: [Pet]
+}
+
+type Person {
+    id: Long
+    name: String
+}
+```
+
+Аналогия: Java class. Нельзя использовать `type` как аргумент мутации — только для возврата данных.
+
+---
+
+### Тип 2 — Interface
+
+Контракт — набор полей которые обязан иметь каждый тип что его реализует. Только OUTPUT.
+
+Из `pets.graphqls`:
+```graphql
+interface Pet {
+    id: Long
+    name: String
+    color: String
+    kind: PetKind
+    friends: [Pet]
+}
+```
+
+`Dog` и `Cat` оба реализуют `Pet` — обязаны иметь все поля. Позволяет запросить всех питомцев одним запросом независимо от типа. Аналог Java `interface`.
+
+---
+
+### Тип 3 — Union
+
+Тип который может быть одним из нескольких разных объектных типов. Не требует общих полей (в отличие от Interface). Только OUTPUT.
+
+В проекте не используется, но пример:
+```graphql
+union SearchResult = Dog | Cat | Person
+
+query {
+    search(name: "Luna") {
+        ... on Dog { name, owners { name } }
+        ... on Cat { name, color }
+        ... on Person { name }
+    }
+}
+```
+
+---
+
+### Тип 4 — Enum
+
+Фиксированный набор значений. Используется в обоих направлениях (INPUT и OUTPUT).
+
+Из `pets.graphqls`:
+```graphql
+enum PetKind {
+    CAT
+    DOG
+    BIRD
+}
+```
+
+В запросе: `getPets(kind: CAT)`. В ответе: `type Dog { kind: PetKind }`.
+Из `common.graphqls`: `enum ThumbnailFormat`, `enum Direction`.
+
+---
+
+### Тип 5 — Scalar
+
+Примитивный тип ("лист" графа). Нет вложенных полей. INPUT и OUTPUT.
+
+Встроенные: `String`, `Int`, `Float`, `Boolean`, `ID`.
+
+Кастомные из `common.graphqls`:
+```graphql
+scalar LocalDateTime @specifiedBy(url: "...")
+scalar Url           @specifiedBy(url: "...")
+scalar Long          @specifiedBy(url: "...")
+```
+
+`Long` нужен для Java `long` (64-bit). Стандартный `Int` в GraphQL только 32-bit.
+
+---
+
+### Тип 6 — InputObject
+
+Объект для передачи данных от клиента к серверу. Только INPUT. Аналог `@RequestBody` DTO.
+
+Из `pets.graphqls`:
+```graphql
+input CreatePetInput {
+    name: String!       # обязательно при создании
+    color: String
+    kind: PetKind!      # обязательно при создании
+    friendIds: [Long]
+    ownerIds: [Long]
+}
+
+input UpdatePetInput {
+    name: String        # всё опционально при обновлении
+    color: String
+    kind: PetKind
+    friendIds: [Long]
+    ownerIds: [Long]
+}
+```
+
+`input` может содержать только скаляры и другие `input` типы — не может ссылаться на `type`.
+
+---
+
+### Тип 7 — List
+
+Wrapping type — обёртка вокруг любого типа. Обозначается `[...]`. INPUT и OUTPUT.
+
+Из проекта:
+```graphql
+pets: [Pet2]         # список может быть null, элементы null
+getPets: [Pet!]!     # список не null, элементы не null
+friends: [Pet]       # список null, элементы null
+friendIds: [Long]    # список ID для input
+owners: [Person!]    # элементы не могут быть null
+```
+
+---
+
+### Тип 8 — NonNull
+
+Wrapping type — запрещает null. Обозначается `!`. INPUT и OUTPUT.
+
+```graphql
+name: String!           # OUTPUT — никогда не вернёт null
+kind: PetKind!          # INPUT — аргумент обязателен
+updatePet(id: Long!...)  # аргументы обязательны
+```
+
+INPUT нарушение `!` → ValidationError до вызова Java кода.
+OUTPUT нарушение `!` → null propagation, уничтожение родительского поля.
+
+---
+
+### Итог — 8 типов
+
+| # | Тип | Направление | Пример из проекта |
+|---|---|---|---|
+| 1 | Object | OUTPUT | `type Dog`, `type Cat`, `type Person` |
+| 2 | Interface | OUTPUT | `interface Pet` |
+| 3 | Union | OUTPUT | не используется в проекте |
+| 4 | Enum | BOTH | `enum PetKind { CAT, DOG, BIRD }` |
+| 5 | Scalar | BOTH | `Long`, `String`, `ID`, `LocalDateTime` |
+| 6 | InputObject | INPUT | `input CreatePetInput`, `input UpdatePetInput` |
+| 7 | List | BOTH (wrapping) | `[Pet]`, `[Pet!]!`, `[Long]` |
+| 8 | NonNull | BOTH (wrapping) | `!` везде |
+
+---
+
+### extend type Mutation — разбор
+
+В `schema.graphqls` объявлены пустые корневые типы:
+```graphql
+type Query {}
+type Mutation {}
+```
+
+Каждый файл расширяет их через `extend`:
+```
+schema.graphqls     → type Mutation {}                         ← 1 раз
+pets.graphqls       → extend type Mutation { createPet... }   ← расширение
+department.graphqls → extend type Mutation { newDepartment... }← расширение
+employee.graphqls   → extend type Mutation { newEmployee... }  ← расширение
+```
+
+Разбор:
+```graphql
+createPet(input: CreatePetInput!): Pet
+# input — InputObject, ! — обязателен, Pet — может быть null
+
+updatePet(id: Long!, input: UpdatePetInput!): Pet
+# id обязателен + объект для обновления
+
+deletePet(id: Long!): Pet
+# только id, возвращает удалённый объект (или null)
+```
+
+Почему все три без `!` в возвращаемом типе → мягкая стратегия ошибок (null вместо exception).
+Почему `deletePet` возвращает `Pet` → клиент использует объект для UI без лишнего запроса.
+
+---
+
+**Вопрос к студенту:**
+В `pets.graphqls` есть и `interface Pet` и `type Pet2`. Почему создали `Pet2` отдельно, а не сделали `type Pet implements Pet { ... }`? Что в этом логически неправильно?
+
+---
+
 ## Сессия: 2026-06-11
 
 ---

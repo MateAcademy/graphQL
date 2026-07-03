@@ -1,8 +1,9 @@
 package com.hillel.ua.graphql.config;
 
-import graphql.language.StringValue;
+import com.hillel.ua.graphql.entities.pet.Bird;
+import com.hillel.ua.graphql.entities.pet.Cat;
+import com.hillel.ua.graphql.entities.pet.Dog;
 import graphql.scalars.ExtendedScalars;
-import graphql.schema.Coercing;
 import graphql.schema.GraphQLScalarType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,8 +12,6 @@ import org.springframework.graphql.execution.RuntimeWiringConfigurer;
 @Configuration
 public class GraphQLScalarConfig {
 
-    // Скаляр LocalDateTime — используем ту же реализацию что и DateTime,
-    // но регистрируем под именем "LocalDateTime" как указано в схеме
     private static final GraphQLScalarType LOCAL_DATE_TIME = GraphQLScalarType.newScalar()
             .name("LocalDateTime")
             .coercing(ExtendedScalars.DateTime.getCoercing())
@@ -23,6 +22,15 @@ public class GraphQLScalarConfig {
         return builder -> builder
                 .scalar(LOCAL_DATE_TIME)
                 .scalar(ExtendedScalars.Url)
-                .scalar(ExtendedScalars.GraphQLLong);
+                .scalar(ExtendedScalars.GraphQLLong)
+                .scalar(ExtendedScalars.Date)
+                .type("Pet", typeWiring -> typeWiring
+                        .typeResolver(env -> {
+                            Object obj = env.getObject();
+                            if (obj instanceof Dog)  return env.getSchema().getObjectType("Dog");
+                            if (obj instanceof Cat)  return env.getSchema().getObjectType("Cat");
+                            if (obj instanceof Bird) return env.getSchema().getObjectType("Bird");
+                            return null;
+                        }));
     }
 }

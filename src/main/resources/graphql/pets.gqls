@@ -1,0 +1,210 @@
+extend type Query {
+    "Returns a lightweight summary list of all pets (name, color, registration date)"
+    pets: [PetInfo]
+
+    """
+    Returns a single pet by ID or by name.
+    At least one argument must be provided, otherwise returns null.
+    """
+    getPet(
+        "Unique identifier of the pet"
+        id: ID,
+        "The exact name of the pet"
+        name: String
+    ): Pet
+
+    """
+    Returns all pets, optionally filtered by kind and/or age range.
+    Results are sorted by ID in ascending order.
+    """
+    getPets(
+        "Filter by pet species: CAT, DOG or BIRD"
+        kind: PetKind,
+        "Age range filter"
+        filter: PetFilter
+    ): [Pet!]!
+}
+
+"A vaccination record for a pet"
+type Vaccine {
+    "Name of the vaccine (e.g. Rabies, Parvovirus)"
+    name: String
+    "Date when the vaccine was administered"
+    vaccinatedAt: Date
+    "Date when the next dose is due"
+    nextDueDate: Date
+}
+
+"Lightweight pet summary used in the pets list query"
+type PetInfo {
+    name: String
+    color: String
+    "Registration date"
+    data: Date!
+}
+
+"""
+Common interface for all pet types.
+Every pet has an ID, name, color, species, friends and date of birth.
+Use inline fragments (... on Dog) to access type-specific fields.
+"""
+interface Pet {
+    id: Long
+    name: String
+    color: String
+    "Species of the pet"
+    kind: PetKind
+    "Other pets that this pet is friends with"
+    friends: [Pet]
+    dateOfBirth: Date
+    """
+    Returns vaccination records.
+    Pass onlyOverdue: true to get only vaccinations past their due date.
+    """
+    vaccines(
+        "If true, returns only overdue vaccinations"
+        onlyOverdue: Boolean
+    ): [Vaccine!]
+}
+
+"A dog — barks, has owners and vaccination history"
+type Dog implements Pet {
+    id: Long
+    name: String
+    color: String
+    kind: PetKind
+    friends: [Pet]
+    dateOfBirth: Date
+    vaccines(onlyOverdue: Boolean): [Vaccine!]
+    """
+    Returns the dog's owners.
+    Pass includePreviousOwners: true to include former owners as well.
+    """
+    owners(
+        "If true, includes previous owners in addition to current ones"
+        includePreviousOwners: Boolean
+    ): [Person!]
+    "True if this dog barks"
+    doesBark: Boolean
+    "Timestamp when this record was created"
+    createdAt: LocalDateTime
+    "Timestamp when this record was last updated"
+    updatedAt: LocalDateTime
+}
+
+"A cat — meows and has vaccination history"
+type Cat implements Pet {
+    id: Long
+    name: String
+    color: String
+    kind: PetKind
+    friends: [Pet]
+    dateOfBirth: Date
+    vaccines(onlyOverdue: Boolean): [Vaccine!]
+    "True if this cat meows"
+    doesMeow: Boolean
+}
+
+"A bird — has vaccination history"
+type Bird implements Pet {
+    id: Long
+    name: String
+    color: String
+    kind: PetKind
+    friends: [Pet]
+    dateOfBirth: Date
+    vaccines(onlyOverdue: Boolean): [Vaccine!]
+}
+
+"A person who can be an owner of a pet"
+type Person {
+    id: Long
+    name: String
+}
+
+"Age range filter for pet queries"
+input PetFilter {
+    "Minimum age in years (inclusive)"
+    minAge: Int
+    "Maximum age in years (inclusive)"
+    maxAge: Int
+}
+
+"Species of a pet"
+enum PetKind {
+    CAT
+    DOG
+    BIRD
+}
+
+#}
+#
+#extend type Mutation {
+#    createPet(input: CreatePetInput!): Pet
+#    updatePet(id: Long!, input: UpdatePetInput!): Pet
+#    deletePet(id: Long!): Pet
+#}
+#
+
+#
+
+#
+#interface Pet {
+#    id: Long
+#    name: String
+#    color: String
+#    kind: PetKind
+#    friends: [Pet]
+#    dateOfBirth: Date
+#}
+#
+#type Dog implements Pet {
+#    id: Long
+#    name: String
+#    color: String
+#    kind: PetKind
+#    friends: [Pet]
+#    owners: [Person!]
+#    dateOfBirth: Date
+#    profilePicture: Url
+#    createdAt: LocalDateTime
+#    updatedAt: LocalDateTime
+#}
+#
+#type Cat implements Pet {
+#    id: Long
+#    name: String
+#    color: String
+#    kind: PetKind
+#    friends: [Pet]
+#    dateOfBirth: Date
+#}
+#
+#type Bird implements Pet {
+#    id: Long
+#    name: String
+#    color: String
+#    kind: PetKind
+#    friends: [Pet]
+#    dateOfBirth: Date
+#}
+#
+#input CreatePetInput {
+#    name: String!
+#    color: String
+#    kind: PetKind!
+#    friendIds: [Long]
+#    ownerIds: [Long]
+#    dateOfBirth: Date
+#    profilePictureUrl: String
+#}
+#
+#input UpdatePetInput {
+#    name: String
+#    color: String
+#    kind: PetKind
+#    friendIds: [Long]
+#    ownerIds: [Long]
+#    dateOfBirth: Date
+#    profilePictureUrl: String
+#}

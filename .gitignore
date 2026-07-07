@@ -35,3 +35,6 @@ build/
 ### Secrets ###
 .env
 application-local.yml
+
+### MongoDB data ###
+data/
